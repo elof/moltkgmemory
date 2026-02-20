@@ -1,0 +1,148 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "moltkgmemory",
+  "description": "Knowledge graph schema for agent memory",
+  "version": "0.1.0",
+  "node": {
+    "type": "object",
+    "required": [
+      "id",
+      "type",
+      "label"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "entity",
+          "concept",
+          "event",
+          "source"
+        ]
+      },
+      "label": {
+        "type": "string"
+      },
+      "content": {
+        "type": "string"
+      },
+      "metadata": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "last_accessed": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "access_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "source_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "edge": {
+    "type": "object",
+    "required": [
+      "source",
+      "target",
+      "type"
+    ],
+    "properties": {
+      "source": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "target": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "co_accessed",
+          "contradicts",
+          "supports",
+          "mentions",
+          "derived_from",
+          "temporal_sequence"
+        ]
+      },
+      "weight": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "metadata": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "last_reinforced": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "context_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "resolution_status": {
+            "type": "string",
+            "enum": [
+              "unreviewed",
+              "investigated_consistent",
+              "investigated_both_valid",
+              "resolved"
+            ],
+            "description": "Only applies to contradicts edges. Unreviewed = potential energy. investigated_both_valid = the tension is real and load-bearing."
+          }
+        }
+      }
+    }
+  },
+  "edge_semantics": {
+    "co_accessed": "A and B accessed in the same cognitive task. Weight accumulates over time into cognitive fingerprints.",
+    "contradicts": "A and B are in tension. Use resolution_status to track investigation state. Do not auto-resolve.",
+    "supports": "A provides evidence or support for B.",
+    "mentions": "A references B. Weaker than supports.",
+    "derived_from": "A was inferred or created from B.",
+    "temporal_sequence": "A preceded B. Useful for event chains and causal reasoning."
+  },
+  "design_notes": {
+    "co_accessed_unit": "Cognitive task, not context window. The goal being pursued, not the technical container.",
+    "contradiction_policy": "Do not auto-resolve. contradicts edges are features, not bugs. The contradiction IS the knowledge.",
+    "confidence_decay": "Confidence should degrade for nodes not accessed in N sessions. Staleness is meaningful.",
+    "negative_space": "Query what you do NOT connect. Absence of co_accessed edges is signal."
+  }
+}
